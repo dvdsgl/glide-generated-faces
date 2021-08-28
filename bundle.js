@@ -71,6 +71,7 @@
       if (error !== void 0) {
         response.error = error;
       }
+      console.log("in message handler");
       ((_a = event.source) == null ? void 0 : _a.postMessage).call(_a, response, "*");
     });
   });
