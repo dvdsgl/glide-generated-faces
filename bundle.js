@@ -518,34 +518,55 @@
   }
 
   // src/column.ts
-  var page = 0;
-  var unassigned = [];
-  var assigned = {};
-  function getMoreFaces(key) {
-    return __async(this, null, function* () {
-      page++;
-      const { faces } = yield fetch(`https://api.generated.photos/api/v1/faces?order_by=oldest&page=${page}&per_page=100&api_key=${key}`, {
+  function makeParams(params) {
+    var _a;
+    return {
+      emotion: (_a = params.emotion) != null ? _a : "neutral"
+    };
+  }
+  function makeParamsKey(params) {
+    return JSON.stringify(params);
+  }
+  var faceSets = {};
+  function getFaceSet(partial) {
+    var _a;
+    const key = makeParamsKey(makeParams(partial));
+    const set = (_a = faceSets[key]) != null ? _a : {
+      currentPage: 0,
+      unassigned: [],
+      assigned: {}
+    };
+    return faceSets[key] = set;
+  }
+  function getMoreFaces(_0) {
+    return __async(this, arguments, function* (key, partialParams = {}) {
+      const params = makeParams(partialParams);
+      const faceSet = getFaceSet(params);
+      faceSet.currentPage++;
+      const { faces } = yield fetch(`https://api.generated.photos/api/v1/faces?order_by=oldest&page=${faceSet.currentPage}&per_page=100&emotion=${params.emotion}&api_key=${key}`, {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json"
         },
         method: "GET"
       }).then((x) => x.json());
-      unassigned.push(...faces);
+      faceSet.unassigned.push(...faces);
     });
   }
-  var column_default = column((seed, key) => __async(void 0, null, function* () {
+  var column_default = column((seed, emotion, key) => __async(void 0, null, function* () {
     if (key.value === void 0)
       throw new Error("Missing key");
     if (seed.value === void 0)
       return void 0;
     const faceKey = `${seed.value}`;
+    const faceParams = { emotion: emotion.value };
+    const { assigned, unassigned } = getFaceSet(faceParams);
     let face = assigned[faceKey];
     while (face === void 0) {
       if (unassigned.length > 0) {
         face = assigned[faceKey] = unassigned.pop();
       } else {
-        yield getMoreFaces(key.value);
+        yield getMoreFaces(key.value, faceParams);
       }
     }
     const image = findSize(face, "256");
