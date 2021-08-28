@@ -539,10 +539,11 @@
       throw new Error("Missing key");
     if (seed.value === void 0)
       return void 0;
-    let face = assigned[seed.value];
+    const faceKey = `${seed.value}`;
+    let face = assigned[faceKey];
     while (face === void 0) {
       if (unassigned.length > 0) {
-        face = assigned[seed.value] = unassigned.pop();
+        face = assigned[faceKey] = unassigned.pop();
       } else {
         yield getMoreFaces(key.value);
       }
