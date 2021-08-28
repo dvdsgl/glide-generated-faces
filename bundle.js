@@ -23,6 +23,7 @@
   // src/column.ts
   function column_default(seed, key) {
     return __async(this, null, function* () {
+      console.log({ seed });
       seed = seed.value;
       if (seed === void 0)
         return void 0;
